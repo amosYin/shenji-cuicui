@@ -1,21 +1,30 @@
-uses: actions/setup-node@v4
-        with:
-          node-version: '23'    # 根据项目使用的 Node 版本调整
-          cache: 'npm'
+name: Deploy to Aliyun OSS
 
+on:
+  push:
+    branches:
+      - main  # 确保这里的分支名与你的主分支名一致2
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '23'
+          cache: 'npm'
       - name: Install dependencies
         run: npm ci
-
       - name: Build project
         run: npm run build
-
-      - name: Upload to OSS
-        uses: aliyun/oss-website-action@v1
-        with:
-          accessKeyId: ${{ secrets.OSS_ACCESS_KEY_ID }}
-          accessKeySecret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
-          bucket: shenji-cuicui      # 你的香港 Bucket 名称  
-          endpoint: oss-cn-hongkong.aliyuncs.com
-          folder: dist                # 本地构建输出目录
-          # 如果你需要上传到 Bucket 的某个子目录，可以用 targetFolder 参数
-          # targetFolder: myapp
+      - name: Install ossutil
+        run: |
+          sudo -v ; curl https://gosspublic.alicdn.com/ossutil/install.sh | sudo bash
+      - name: Configure ossutil
+        run: |
+          ossutil config -e oss-cn-hongkong.aliyuncs.com -i ${{ secrets.OSS_ACCESS_KEY_ID }} -k ${{ secrets.OSS_ACCESS_KEY_SECRET }} --language CH
+      - name: Sync files to OSS
+        run: ossutil cp ./dist oss://shenji-cuicui/ --recursive --update
