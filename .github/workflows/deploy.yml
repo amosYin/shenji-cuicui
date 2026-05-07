@@ -14,7 +14,7 @@ uses: actions/setup-node@v4
         with:
           accessKeyId: ${{ secrets.OSS_ACCESS_KEY_ID }}
           accessKeySecret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
-          bucket: shenji-cuicui      # 你的香港 Bucket 名称  
+          bucket: shenji-cuicui     # 你的香港 Bucket 名称  
           endpoint: oss-cn-hongkong.aliyuncs.com
           folder: dist                # 本地构建输出目录
           # 如果你需要上传到 Bucket 的某个子目录，可以用 targetFolder 参数
