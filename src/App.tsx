@@ -20,7 +20,10 @@ import {
   Search,
   Eye,
   FileSearch,
-  Info
+  Info,
+  History,
+  ChevronRight,
+  Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import * as mammoth from 'mammoth';
@@ -60,6 +63,36 @@ const REQUIRED_EXCELS: { key: FileType; label: string }[] = [
   { key: 'trial_balance', label: '余额表' },
 ];
 
+const MOCK_HISTORY = [
+  {
+    id: 'H001',
+    productName: '某量化策略1号全周期进取型资产管理计划',
+    compareTime: '2026-05-07 10:22',
+    mainFile: '2025年度审计报告_最终版.docx',
+    excelFiles: ['余额表.xlsx', '净资产变动表.xlsx', '利润表.xlsx'],
+    status: '有差异',
+    diffCount: 3
+  },
+  {
+    id: 'H002',
+    productName: '睿智增长集合资产管理计划01期',
+    compareTime: '2026-05-06 15:45',
+    mainFile: '2025年度审计报告.docx',
+    excelFiles: ['余额表.xlsx', '利润表.xlsx'],
+    status: '正常',
+    diffCount: 0
+  },
+  {
+    id: 'H003',
+    productName: '稳健型固收+增强私募基金',
+    compareTime: '2026-05-05 09:12',
+    mainFile: '审计报告（初稿）.docx',
+    excelFiles: ['余额表.xlsx'],
+    status: '有差异',
+    diffCount: 12
+  }
+];
+
 export default function App() {
   const [files, setFiles] = useState<Record<FileType, FileState>>({
     audit_report: { file: null, status: 'idle', data: null },
@@ -70,7 +103,7 @@ export default function App() {
     trial_balance: { file: null, status: 'idle', data: null },
   });
 
-  const [view, setView] = useState<'upload' | 'comparison'>('upload');
+  const [view, setView] = useState<'upload' | 'comparison' | 'history'>('upload');
   const [activeTab, setActiveTab] = useState<string>('net_assets');
   const [wordHtml, setWordHtml] = useState<string>('');
 
@@ -245,9 +278,25 @@ export default function App() {
             功能菜单
           </div>
           <nav className="p-2 space-y-1">
-            <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-primary bg-red-50 rounded-lg">
+            <button 
+              onClick={() => setView('upload')}
+              className={cn(
+                "w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-lg transition-colors",
+                (view === 'upload' || view === 'comparison') ? "text-primary bg-red-50" : "text-slate-600 hover:bg-slate-50"
+              )}
+            >
               <FileSearch className="w-5 h-5" />
               产品财务审计
+            </button>
+            <button 
+              onClick={() => setView('history')}
+              className={cn(
+                "w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-lg transition-colors",
+                view === 'history' ? "text-primary bg-red-50" : "text-slate-600 hover:bg-slate-50"
+              )}
+            >
+              <History className="w-5 h-5" />
+              产品对比历史
             </button>
           </nav>
         </aside>
@@ -255,36 +304,109 @@ export default function App() {
         {/* Content Area */}
         <main className="flex-1 overflow-auto bg-slate-50 relative flex flex-col">
           {/* Main Content Tabs */}
-          <div className="bg-white border-b border-slate-200 px-6 flex items-center gap-2">
-            <button 
-              onClick={() => setView('upload')}
-              className={cn(
-                "px-6 py-3 text-sm font-bold border-b-2 transition-all",
-                view === 'upload' ? "border-primary text-primary" : "border-transparent text-slate-400 hover:text-slate-600"
-              )}
-            >
-              数据采集上传
-            </button>
-            <AnimatePresence>
-              {(view === 'comparison' || isAllFilesReady) && (
-                <motion.button 
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  onClick={() => setView('comparison')}
-                  className={cn(
-                    "px-6 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2",
-                    view === 'comparison' ? "border-primary text-primary" : "border-transparent text-slate-400 hover:text-slate-600"
-                  )}
-                >
-                  审计比对报告
-                  {view === 'comparison' && <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />}
-                </motion.button>
-              )}
-            </AnimatePresence>
-          </div>
+          {(view === 'upload' || view === 'comparison') && (
+            <div className="bg-white border-b border-slate-200 px-6 flex items-center gap-2">
+              <button 
+                onClick={() => setView('upload')}
+                className={cn(
+                  "px-6 py-3 text-sm font-bold border-b-2 transition-all",
+                  view === 'upload' ? "border-primary text-primary" : "border-transparent text-slate-400 hover:text-slate-600"
+                )}
+              >
+                数据采集上传
+              </button>
+              <AnimatePresence>
+                {(view === 'comparison' || isAllFilesReady) && (
+                  <motion.button 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    onClick={() => setView('comparison')}
+                    className={cn(
+                      "px-6 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2",
+                      view === 'comparison' ? "border-primary text-primary" : "border-transparent text-slate-400 hover:text-slate-600"
+                    )}
+                  >
+                    审计比对报告
+                    {view === 'comparison' && <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />}
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
 
           <div className="flex-1 overflow-auto p-8">
-            {view === 'upload' ? (
+            {view === 'history' ? (
+              <div className="max-w-6xl mx-auto space-y-6">
+                <header className="mb-8">
+                  <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">产品对比历史</h1>
+                  <p className="text-slate-500">查看并管理已完成的所有审计比对任务记录。</p>
+                </header>
+
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-100">
+                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">产品名称 / 比对时间</th>
+                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">审计报告</th>
+                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">核对附件数</th>
+                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">比对状态</th>
+                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {MOCK_HISTORY.map((item) => (
+                        <tr key={item.id} className="hover:bg-slate-50/80 transition-colors group">
+                          <td className="px-6 py-4">
+                            <div className="font-bold text-slate-700 mb-1">{item.productName}</div>
+                            <div className="text-xs text-slate-400 flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {item.compareTime}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <div className="inline-flex items-center gap-2 text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-md">
+                              <FileText className="w-4 h-4 text-primary" />
+                              {item.mainFile.length > 15 ? item.mainFile.substring(0, 15) + '...' : item.mainFile}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <span className="text-sm font-bold text-slate-600 bg-slate-100 w-8 h-8 inline-flex items-center justify-center rounded-full">
+                              {item.excelFiles.length}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className={cn(
+                              "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold",
+                              item.status === '正常' 
+                                ? "bg-green-100 text-green-700" 
+                                : "bg-red-100 text-red-700"
+                            )}>
+                              {item.status === '正常' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
+                              {item.status === '正常' ? '核对一致' : `异常 (${item.diffCount})`}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <button 
+                              onClick={() => {
+                                loadDemoData();
+                                setView('comparison');
+                              }}
+                              className="inline-flex items-center gap-1 text-sm font-bold text-primary hover:underline"
+                            >
+                              详情
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="p-4 bg-white border-t border-slate-100 text-center">
+                    <p className="text-xs text-slate-400 font-medium">显示最近 20 条比对记录</p>
+                  </div>
+                </div>
+              </div>
+            ) : view === 'upload' ? (
               <div className="max-w-4xl mx-auto space-y-8">
                 <header className="text-center md:text-left mb-12">
                   <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-2">审计报告核对工具</h1>
