@@ -1,21 +1,21 @@
-uses: actions/setup-node@v4
-        with:
-          node-version: '23'    # 根据项目使用的 Node 版本调整
-          cache: 'npm'
+steps:
+  - uses: actions/setup-node@v4
+    with:
+      node-version: '23'      # 建议改用 20 或 22（更稳定）
+      cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+  - name: Install dependencies
+    run: npm ci
 
-      - name: Build project
-        run: npm run build
+  - name: Build project
+    run: npm run build
 
-      - name: Upload to OSS
-        uses: aliyun/oss-website-action@v1
-        with:
-          accessKeyId: ${{ secrets.OSS_ACCESS_KEY_ID }}
-          accessKeySecret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
-          bucket: shenji-cuicui     # 你的香港 Bucket 名称  
-          endpoint: oss-cn-hongkong.aliyuncs.com
-          folder: dist                # 本地构建输出目录
-          # 如果你需要上传到 Bucket 的某个子目录，可以用 targetFolder 参数
-          # targetFolder: myapp
+  - name: Upload to OSS
+    uses: aliyun/oss-website-action@v1
+    with:
+      accessKeyId: ${{ secrets.OSS_ACCESS_KEY_ID }}
+      accessKeySecret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+      bucket: shenji-cuicui
+      endpoint: oss-cn-hongkong.aliyuncs.com
+      folder: dist
+      # targetFolder: myapp   # 按需取消注释
