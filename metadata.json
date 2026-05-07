@@ -1,0 +1,6 @@
+{
+  "name": "审计数据对比工具",
+  "description": "专业审计报告数据自动比对系统，支持Word报告与财务报表Excel的一键核对与差异高亮。",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #EE1F2D;
+  --color-primary-hover: #D11B27;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900;
+  }
+}
+
+.word-content table {
+  @apply w-full border-collapse my-4;
+}
+
+.word-content td, .word-content th {
+  @apply border border-slate-300 p-2 text-sm;
+}
+
+.highlight-diff {
+  @apply bg-yellow-200 text-red-600 font-bold px-1 rounded border border-red-300 cursor-help;
+}
+
+.highlight-match {
+  @apply bg-green-100 text-green-700 px-1 rounded border border-green-200;
+}
